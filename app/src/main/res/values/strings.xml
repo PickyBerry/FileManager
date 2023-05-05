@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">InternshipAssignment</string>
+    <string-array name="sorts">
+        <item>Name min</item>
+        <item>Name max</item>
+        <item>Size min</item>
+        <item>Size max</item>
+        <item>Date min</item>
+        <item>Date max</item>
+        <item>Extension min</item>
+        <item>Extension max</item>
+    </string-array>
+</resources>
