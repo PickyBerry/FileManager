@@ -10,4 +10,7 @@
         <item>Extension min</item>
         <item>Extension max</item>
     </string-array>
+    <string name="no_permissions">Permission not received!</string>
+    <string name="see_updated">SEE UPDATED</string>
+    <string name="see_all">SEE ALL</string>
 </resources>

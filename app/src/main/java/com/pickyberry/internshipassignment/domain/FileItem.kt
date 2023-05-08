@@ -3,16 +3,16 @@ package com.pickyberry.internshipassignment.domain
 import java.nio.file.attribute.FileTime
 import java.util.*
 
-data class FileItem(val name: String, val size: Long, val creationDate: FileTime) {
+data class FileItem(val path: String, val size: Long, val creationDate: FileTime) {
     companion object {
         fun sortNamesAscending(): Comparator<FileItem> = Comparator<FileItem> { o1, o2 ->
-            o1!!.name.lowercase(Locale.getDefault())
-                .compareTo(o2!!.name.lowercase(Locale.getDefault()))
+            o1!!.path.split('/').last().lowercase(Locale.getDefault())
+                .compareTo(o2!!.path.split('/').last().lowercase(Locale.getDefault()))
         }
 
         fun sortNamesDescending(): Comparator<FileItem> = Comparator<FileItem> { o1, o2 ->
-            o2!!.name.lowercase(Locale.getDefault())
-                .compareTo(o1!!.name.lowercase(Locale.getDefault()))
+            o2!!.path.split('/').last().lowercase(Locale.getDefault())
+                .compareTo(o1!!.path.split('/').last().lowercase(Locale.getDefault()))
         }
 
         fun sortSizesAscending(): Comparator<FileItem> =
@@ -27,10 +27,10 @@ data class FileItem(val name: String, val size: Long, val creationDate: FileTime
         fun sortDatesDescending(): Comparator<FileItem> =
             Comparator<FileItem> { o1, o2 -> o1!!.creationDate.compareTo(o2!!.creationDate) }
 
-        fun sortExtensionssAscending(): Comparator<FileItem> =
-            Comparator<FileItem> { o1, o2 -> o1!!.name.split('.').last().compareTo(o2!!.name.split('.').last()) }
+        fun sortExtensionsAscending(): Comparator<FileItem> =
+            Comparator<FileItem> { o1, o2 -> o1!!.path.split('.').last().compareTo(o2!!.path.split('.').last()) }
 
         fun sortExtensionsDescending(): Comparator<FileItem> =
-            Comparator<FileItem> { o1, o2 -> o2!!.name.split('.').last().compareTo(o1!!.name.split('.').last()) }
+            Comparator<FileItem> { o1, o2 -> o2!!.path.split('.').last().compareTo(o1!!.path.split('.').last()) }
     }
 }
