@@ -53,6 +53,10 @@ class FileListFragment : Fragment() {
                 if (viewModel.showingUpdatedFiles) resources.getString(R.string.see_all)
                 else resources.getString(R.string.see_updated)
         }
+
+        recyclerFilesAdapter.folderClicked.observe(viewLifecycleOwner){
+            viewModel.getFiles(it)
+        }
         return binding.root
     }
 
@@ -79,7 +83,6 @@ class FileListFragment : Fragment() {
                 itemSelected: View?, selectedItemPosition: Int, selectedId: Long,
             ) {
                 lifecycleScope.launch {
-                  //  viewModel.sort(SortTypes.from(selectedItemPosition)!!)
                     viewModel.sort(SortTypes.from(selectedItemPosition)!!)
                 }
                 binding.recyclerView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->

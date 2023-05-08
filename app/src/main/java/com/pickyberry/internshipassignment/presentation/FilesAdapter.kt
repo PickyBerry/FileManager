@@ -1,31 +1,28 @@
 package com.pickyberry.internshipassignment.presentation
 
+import android.content.ActivityNotFoundException
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.webkit.MimeTypeMap
+import android.widget.Toast
 import androidx.core.content.FileProvider
-import androidx.recyclerview.widget.AsyncListDiffer
-import androidx.recyclerview.widget.DiffUtil
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.pickyberry.internshipassignment.R
 import com.pickyberry.internshipassignment.databinding.ItemFileBinding
 import com.pickyberry.internshipassignment.domain.FileItem
-import com.pickyberry.internshipassignment.domain.SortTypes
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
 import java.io.File
-import java.util.Collections
-import kotlin.concurrent.thread
 
 
 class FilesAdapter(private val context: Context) :
     RecyclerView.Adapter<FilesAdapter.FileViewHolder>() {
 
-
+    val folderClicked = MutableLiveData<String>()
     var currentList = listOf<FileItem>()
 
     override fun onCreateViewHolder(
@@ -45,46 +42,72 @@ class FilesAdapter(private val context: Context) :
             binding.name.text = fileItem.path.split('/').last()
             binding.size.text = FileUtils.byteCountToDisplaySize(fileItem.size).toString()
             binding.date.text = fileItem.creationDate.toString()
-            binding.icon.setImageResource(iconFromFileExtension(fileItem.path.split('.').last()))
+            if (fileItem.isDirectory)
+                binding.icon.setImageResource(R.drawable.folder_icon)
+                else binding.icon.setImageResource(iconFromFileExtension(fileItem.path.split('.').last()))
+            Log.e(fileItem.path,fileItem.path.split('.').last())
         }
         holder.itemView.setOnClickListener {
-            val data = FileProvider.getUriForFile(
+            if (fileItem.isDirectory)
+                folderClicked.postValue(fileItem.path)
+            val path = FileProvider.getUriForFile(
                 context,
                 context.applicationContext.packageName + ".provider",
                 File(fileItem.path)
             );
             context.grantUriPermission(
                 context.packageName,
-                data,
+                path,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
             val type =
                 MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileItem.path.split('.').last())
             val intent = Intent(Intent.ACTION_VIEW)
-                .setDataAndType(data, type)
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            context.startActivity(intent);
+                .setDataAndType(path, type)
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            try {
+                context.startActivity(intent)
+            } catch (e: ActivityNotFoundException) {
+                Toast.makeText(context, "Can't open file!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        holder.itemView.setOnLongClickListener {
+            shareFile(fileItem)
+            true
         }
     }
 
     private fun shareFile(fileItem: FileItem) {
         val file = File(fileItem.path)
-        //val path = Uri.fromFile(file)
         val path = FileProvider.getUriForFile(
             context,
             context.applicationContext.packageName + ".provider",
             file
         )
+        context.grantUriPermission(
+            context.packageName,
+            path,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
         val sharingIntent = Intent(Intent.ACTION_SEND)
-        sharingIntent.type = "image/*"
-        sharingIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, arrayListOf(path))
         sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        context.startActivity(sharingIntent)
+        sharingIntent.type =
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileItem.path.split('.').last())
+        sharingIntent.putExtra(Intent.EXTRA_STREAM, path)
+        sharingIntent.clipData = ClipData(
+            "",
+            arrayOf(
+                MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileItem.path.split('.').last())
+            ),
+            ClipData.Item(path)
+        )
+        context.startActivity(Intent.createChooser(sharingIntent, "Share to..."))
     }
 
 
     fun setData(list: List<FileItem>) {
-        currentList=list
+        currentList = list
         notifyDataSetChanged()
     }
 

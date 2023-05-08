@@ -4,6 +4,8 @@ import com.pickyberry.internshipassignment.data.FileEntity
 import java.io.File
 
 interface Repository {
+
+    suspend fun getFiles(root: File, fileList: MutableList<FileItem>)
     suspend fun getAllFiles(root: File, fileList: MutableList<FileItem>)
 
     suspend fun getUpdatedFiles()

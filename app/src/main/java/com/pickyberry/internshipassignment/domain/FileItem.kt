@@ -3,7 +3,7 @@ package com.pickyberry.internshipassignment.domain
 import java.nio.file.attribute.FileTime
 import java.util.*
 
-data class FileItem(val path: String, val size: Long, val creationDate: FileTime) {
+data class FileItem(val path: String, val size: Long, val creationDate: FileTime,val isDirectory:Boolean) {
     companion object {
         fun sortNamesAscending(): Comparator<FileItem> = Comparator<FileItem> { o1, o2 ->
             o1!!.path.split('/').last().lowercase(Locale.getDefault())

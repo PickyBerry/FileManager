@@ -1,7 +1,6 @@
 package com.pickyberry.internshipassignment.presentation
 
 import android.os.Environment
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,7 +9,6 @@ import com.pickyberry.internshipassignment.data.RepositoryImpl
 import com.pickyberry.internshipassignment.domain.FileItem
 import com.pickyberry.internshipassignment.domain.Repository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Collections
@@ -27,57 +25,58 @@ class FileListViewModel : ViewModel() {
     private var updatedFiles = listOf<FileItem>()
 
 
-    init{
-        sort(SortTypes.NAMES_ASC)
+    init {
+        getFiles(Environment.getExternalStorageDirectory().absolutePath,SortTypes.NAMES_ASC)
     }
 
-    fun sort(type: SortTypes) {
+    fun getFiles(rootPath: String, newType: SortTypes?) {
+        val sortType = newType ?: sortedBy
         viewModelScope.launch(Dispatchers.IO) {
             loading.postValue(true)
-            if (_currentFiles.value == null || _currentFiles.value!!.isEmpty()) {
+
                 val list = mutableListOf<FileItem>()
 
                 if (showingUpdatedFiles)
                     repository.getUpdatedFiles()
                 else
-                    repository.getAllFiles(
+                    repository.getFiles(
                         File(Environment.getExternalStorageDirectory().absolutePath),
                         list
                     )
+                sort(list,sortType)
                 _currentFiles.postValue(list)
-                sortedBy = type
-              //  Log.e("size",list.size.toString())
-            } else {
+                sortedBy = sortType
 
-                val list = _currentFiles.value!!.toMutableList()
-                if (shouldReverse(type)) list.reverse()
-                else when (type) {
-                    //ПОПРОБОВАТЬ ЗАМЕНИТЬ НА list.sortBy !!!!!!!!!!
-                    SortTypes.NAMES_ASC -> Collections.sort(list, FileItem.sortNamesAscending())
-                    SortTypes.NAMES_DESC -> Collections.sort(list, FileItem.sortNamesDescending())
-                    SortTypes.SIZE_ASC -> Collections.sort(list, FileItem.sortSizesAscending())
-                    SortTypes.SIZE_DESC -> Collections.sort(list, FileItem.sortSizesDescending())
-                    SortTypes.DATE_ASC -> Collections.sort(list, FileItem.sortDatesAscending())
-                    SortTypes.DATE_DESC -> Collections.sort(list, FileItem.sortDatesDescending())
-                    SortTypes.EXT_ASC -> Collections.sort(list, FileItem.sortExtensionsAscending())
-                    SortTypes.EXT_DESC -> Collections.sort(
-                        list,
-                        FileItem.sortExtensionsDescending()
-                    )
-                }
-                _currentFiles.postValue(list)
-                sortedBy = type
-            }
+
             loading.postValue(false)
         }
     }
 
+    fun sort(list: MutableList<FileItem>,type: SortTypes){
+        if (shouldReverse(type)) list.reverse()
+        else when (type) {
+            //ПОПРОБОВАТЬ ЗАМЕНИТЬ НА list.sortBy !!!!!!!!!!
+            SortTypes.NAMES_ASC -> Collections.sort(list, FileItem.sortNamesAscending())
+            SortTypes.NAMES_DESC -> Collections.sort(list, FileItem.sortNamesDescending())
+            SortTypes.SIZE_ASC -> Collections.sort(list, FileItem.sortSizesAscending())
+            SortTypes.SIZE_DESC -> Collections.sort(list, FileItem.sortSizesDescending())
+            SortTypes.DATE_ASC -> Collections.sort(list, FileItem.sortDatesAscending())
+            SortTypes.DATE_DESC -> Collections.sort(list, FileItem.sortDatesDescending())
+            SortTypes.EXT_ASC -> Collections.sort(list, FileItem.sortExtensionsAscending())
+            SortTypes.EXT_DESC -> Collections.sort(
+                list,
+                FileItem.sortExtensionsDescending()
+            )
+        }
+        _currentFiles.postValue(list)
+        sortedBy = type
+    }
 
     fun switchBetweenAllAndUpdated() {
         showingUpdatedFiles = !showingUpdatedFiles
         if (showingUpdatedFiles) allFiles = currentFiles.value!!
         else updatedFiles = currentFiles.value!!
-        sort(sortedBy)
+      //  getFiles(sortedBy)
     }
 
     private fun shouldReverse(type: SortTypes): Boolean {
