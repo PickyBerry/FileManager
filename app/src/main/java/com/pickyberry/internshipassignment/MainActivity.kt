@@ -40,6 +40,10 @@ class MainActivity : AppCompatActivity() {
         ) */
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+    }
+
 
     private fun allPermissionsGranted(): Boolean {
         for (permission in REQUIRED_PERMISSIONS)

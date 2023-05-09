@@ -2,9 +2,19 @@ package com.pickyberry.internshipassignment.domain
 
 import java.nio.file.attribute.FileTime
 import java.util.*
+import kotlin.Comparator
 
-data class FileItem(val path: String, val size: Long, val creationDate: FileTime,val isDirectory:Boolean) {
+data class FileItem(
+    val path: String,
+    val size: Long,
+    val creationDate: FileTime,
+    val isDirectory: Boolean
+) {
     companion object {
+
+        fun sortIsDirectory(): Comparator<FileItem> =
+            Comparator<FileItem> { o1, o2 -> o2!!.isDirectory.compareTo(o1!!.isDirectory) }
+
         fun sortNamesAscending(): Comparator<FileItem> = Comparator<FileItem> { o1, o2 ->
             o1!!.path.split('/').last().lowercase(Locale.getDefault())
                 .compareTo(o2!!.path.split('/').last().lowercase(Locale.getDefault()))
@@ -28,9 +38,13 @@ data class FileItem(val path: String, val size: Long, val creationDate: FileTime
             Comparator<FileItem> { o1, o2 -> o1!!.creationDate.compareTo(o2!!.creationDate) }
 
         fun sortExtensionsAscending(): Comparator<FileItem> =
-            Comparator<FileItem> { o1, o2 -> o1!!.path.split('.').last().compareTo(o2!!.path.split('.').last()) }
+            Comparator<FileItem> { o1, o2 ->
+                o1!!.path.split('.').last().compareTo(o2!!.path.split('.').last())
+            }
 
         fun sortExtensionsDescending(): Comparator<FileItem> =
-            Comparator<FileItem> { o1, o2 -> o2!!.path.split('.').last().compareTo(o1!!.path.split('.').last()) }
+            Comparator<FileItem> { o1, o2 ->
+                o2!!.path.split('.').last().compareTo(o1!!.path.split('.').last())
+            }
     }
 }

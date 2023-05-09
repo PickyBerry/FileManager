@@ -44,31 +44,38 @@ class FilesAdapter(private val context: Context) :
             binding.date.text = fileItem.creationDate.toString()
             if (fileItem.isDirectory)
                 binding.icon.setImageResource(R.drawable.folder_icon)
-                else binding.icon.setImageResource(iconFromFileExtension(fileItem.path.split('.').last()))
-            Log.e(fileItem.path,fileItem.path.split('.').last())
+            else binding.icon.setImageResource(
+                iconFromFileExtension(
+                    fileItem.path.split('.').last()
+                )
+            )
+            Log.e(fileItem.path, fileItem.path.split('.').last())
         }
         holder.itemView.setOnClickListener {
             if (fileItem.isDirectory)
                 folderClicked.postValue(fileItem.path)
-            val path = FileProvider.getUriForFile(
-                context,
-                context.applicationContext.packageName + ".provider",
-                File(fileItem.path)
-            );
-            context.grantUriPermission(
-                context.packageName,
-                path,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            val type =
-                MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileItem.path.split('.').last())
-            val intent = Intent(Intent.ACTION_VIEW)
-                .setDataAndType(path, type)
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            try {
-                context.startActivity(intent)
-            } catch (e: ActivityNotFoundException) {
-                Toast.makeText(context, "Can't open file!", Toast.LENGTH_SHORT).show()
+            else {
+                val path = FileProvider.getUriForFile(
+                    context,
+                    context.applicationContext.packageName + ".provider",
+                    File(fileItem.path)
+                );
+                context.grantUriPermission(
+                    context.packageName,
+                    path,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+                val type =
+                    MimeTypeMap.getSingleton()
+                        .getMimeTypeFromExtension(fileItem.path.split('.').last())
+                val intent = Intent(Intent.ACTION_VIEW)
+                    .setDataAndType(path, type)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                try {
+                    context.startActivity(intent)
+                } catch (e: ActivityNotFoundException) {
+                    Toast.makeText(context, "Can't open file!", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 

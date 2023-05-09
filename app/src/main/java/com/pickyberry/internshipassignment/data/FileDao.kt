@@ -16,5 +16,5 @@ interface FileDao {
     suspend fun clearFiles()
 
     @Query("SELECT * FROM fileentity where :path == absolutePath ")
-    suspend fun getFileByPath(path: String): FileEntity
+    suspend fun getFileByPath(path: String): FileEntity?
 }

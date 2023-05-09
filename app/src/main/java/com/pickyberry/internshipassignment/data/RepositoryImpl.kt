@@ -13,16 +13,17 @@ import java.security.MessageDigest
 import java.util.*
 
 class RepositoryImpl(
-    //  private val db: FilesDatabase
+    private val db: FilesDatabase
 ) : Repository {
 
-    private val updatedFiles = listOf<String>()
+    private val updatedFiles = mutableListOf<FileItem>()
+    private val allFiles = mutableListOf<FileEntity>()
+
     override suspend fun getFiles(root: File, fileList: MutableList<FileItem>) {
         withContext(Dispatchers.IO) {
             val files = root.listFiles()
             files?.let {
                 for (file in it) {
-              //      getFileChecksum(file)
                     fileList.add(
                         FileItem(
                             file.absolutePath,
@@ -43,34 +44,38 @@ class RepositoryImpl(
     }
 
 
-    override suspend fun getAllFiles(root: File, fileList: MutableList<FileItem>) {
+    override suspend fun getUpdatedFiles(root: File, fileList: MutableList<FileItem>) {
         withContext(Dispatchers.IO) {
             if (root.isDirectory) {
                 val files = root.listFiles()
                 files?.let {
                     for (file in it)
                         if (file.isDirectory)
-                            getAllFiles(file, fileList)
+                            getUpdatedFiles(file, fileList)
                         else {
-                            getFileChecksum(file)
-                            fileList.add(
-                                FileItem(
-                                    file.absolutePath,
-                                    file.length(),
-                                    Files.readAttributes(
-                                        file.toPath(),
-                                        BasicFileAttributes::class.java
-                                    ).creationTime(),
-                                    file.isDirectory
+                            val hash = getFileChecksum(file)
+                            val oldHash = getByPath(file.absolutePath)?.hash
+                            if (oldHash == null || oldHash != hash) {
+                                updatedFiles.add(
+                                    FileItem(
+                                        file.absolutePath,
+                                        file.length(),
+                                        Files.readAttributes(
+                                            file.toPath(),
+                                            BasicFileAttributes::class.java
+                                        ).creationTime(),
+                                        file.isDirectory
+                                    )
                                 )
-                            )
+                            }
+                            allFiles.add(FileEntity(file.absolutePath,hash))
                         }
 
                 }
 
             } else {
-                Log.e("test2", root.absolutePath)
                 // If the root is a file, add its path to the list
+                Log.e("check","mate")
                 fileList.add(
                     FileItem(
                         root.absolutePath,
@@ -112,19 +117,15 @@ class RepositoryImpl(
         return output.toString()
     }
 
-    override suspend fun getUpdatedFiles() = withContext(Dispatchers.IO) {
-        //TODO
-    }
+    private suspend fun insertFile(fileEntity: FileEntity) =
+        withContext(Dispatchers.IO) { db.dao.insertFile(fileEntity) }
 
-    override suspend fun insertFile(fileEntity: FileEntity) =
-        withContext(Dispatchers.IO) { /*db.dao.insertFile(fileEntity)*/ }
+    private suspend fun getByPath(path: String): FileEntity? =
+        withContext(Dispatchers.IO) { db.dao.getFileByPath(path) }
 
-    /*override suspend fun getByPath(path: String): FileEntity =
-        withContext(Dispatchers.IO) { db.dao.getFileByPath(path) }*/
-
-    override suspend fun clearFiles() {
+    private suspend fun clearFiles() {
         withContext(Dispatchers.IO) {
-            /* db.dao.clearFiles()*/
+            db.dao.clearFiles()
         }
     }
 }

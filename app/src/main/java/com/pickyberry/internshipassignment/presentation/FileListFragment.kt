@@ -8,6 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,7 +23,7 @@ import kotlinx.coroutines.launch
 class FileListFragment : Fragment() {
 
     private lateinit var binding: FragmentFileListBinding
-    private val viewModel = FileListViewModel()
+    private val viewModel by viewModels<FileListViewModel>()
     private lateinit var spinnerAdapter: ArrayAdapter<CharSequence>
     private lateinit var recyclerFilesAdapter: FilesAdapter
 
@@ -42,6 +45,7 @@ class FileListFragment : Fragment() {
         }
         setupRecycler()
         setupSpinner()
+        overrideOnBackPressed()
         viewModel.currentFiles.observe(viewLifecycleOwner) {
             recyclerFilesAdapter.setData(it)
         }
@@ -54,8 +58,8 @@ class FileListFragment : Fragment() {
                 else resources.getString(R.string.see_updated)
         }
 
-        recyclerFilesAdapter.folderClicked.observe(viewLifecycleOwner){
-            viewModel.getFiles(it)
+        recyclerFilesAdapter.folderClicked.observe(viewLifecycleOwner) {
+            viewModel.getFiles(it, null)
         }
         return binding.root
     }
@@ -83,7 +87,7 @@ class FileListFragment : Fragment() {
                 itemSelected: View?, selectedItemPosition: Int, selectedId: Long,
             ) {
                 lifecycleScope.launch {
-                    viewModel.sort(SortTypes.from(selectedItemPosition)!!)
+                    viewModel.sort(null, SortTypes.from(selectedItemPosition)!!)
                 }
                 binding.recyclerView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
                     binding.recyclerView.scrollToPosition(0)
@@ -93,5 +97,18 @@ class FileListFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
+
+    private fun overrideOnBackPressed(){
+        requireActivity()
+            .onBackPressedDispatcher
+            .addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+
+                override fun handleOnBackPressed() {
+                    viewModel.goBack()
+                }
+            }
+            )
+    }
+
 
 }
