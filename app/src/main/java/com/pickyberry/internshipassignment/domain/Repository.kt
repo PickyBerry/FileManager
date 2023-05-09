@@ -7,11 +7,6 @@ interface Repository {
 
     suspend fun getFiles(root: File, fileList: MutableList<FileItem>)
 
-    suspend fun getUpdatedFiles(root: File, fileList: MutableList<FileItem>)
+    suspend fun getUpdatedFiles(root: File, fileList: MutableList<FileItem>):List<FileItem>
 
-    //suspend fun insertFile(fileEntity: FileEntity)
-
-   // suspend fun getByPath(path: String):FileEntity
-
-   // suspend fun clearFiles()
 }

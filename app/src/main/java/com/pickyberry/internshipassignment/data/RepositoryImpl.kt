@@ -1,5 +1,6 @@
 package com.pickyberry.internshipassignment.data
 
+
 import android.util.Log
 import com.pickyberry.internshipassignment.domain.FileItem
 import com.pickyberry.internshipassignment.domain.Repository
@@ -10,10 +11,9 @@ import java.io.FileInputStream
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
-import java.util.*
 
 class RepositoryImpl(
-    private val db: FilesDatabase
+    private val db: FilesDatabase,
 ) : Repository {
 
     private val updatedFiles = mutableListOf<FileItem>()
@@ -43,48 +43,43 @@ class RepositoryImpl(
         }
     }
 
-
-    override suspend fun getUpdatedFiles(root: File, fileList: MutableList<FileItem>) {
+    override suspend fun getUpdatedFiles(root: File, fileList: MutableList<FileItem>):List<FileItem> {
         withContext(Dispatchers.IO) {
-            if (root.isDirectory) {
-                val files = root.listFiles()
-                files?.let {
-                    for (file in it)
-                        if (file.isDirectory)
-                            getUpdatedFiles(file, fileList)
-                        else {
-                            val hash = getFileChecksum(file)
-                            val oldHash = getByPath(file.absolutePath)?.hash
-                            if (oldHash == null || oldHash != hash) {
-                                updatedFiles.add(
-                                    FileItem(
-                                        file.absolutePath,
-                                        file.length(),
-                                        Files.readAttributes(
-                                            file.toPath(),
-                                            BasicFileAttributes::class.java
-                                        ).creationTime(),
-                                        file.isDirectory
-                                    )
-                                )
-                            }
-                            allFiles.add(FileEntity(file.absolutePath,hash))
-                        }
+            getHashes(root, fileList)
+            clearFiles()
+            insertFiles(allFiles)
+        }
+        return updatedFiles
+    }
 
+    private suspend fun getHashes(root: File, fileList: MutableList<FileItem>) {
+        if (root.isDirectory) {
+            val files = root.listFiles()
+            files.forEach{ Log.e("hm",it.toString())}
+            files?.let {
+                for (file in it) {
+                    if (file.isDirectory)
+                        getHashes(file, fileList)
+                    else {
+                        val hash = getFileChecksum(file)
+                        val oldHash = getByPath(file.absolutePath)?.hash
+                        if (oldHash == null || oldHash != hash) {
+                            updatedFiles.add(
+                                FileItem(
+                                    file.absolutePath,
+                                    file.length(),
+                                    Files.readAttributes(
+                                        file.toPath(),
+                                        BasicFileAttributes::class.java
+                                    ).creationTime(),
+                                    file.isDirectory
+                                )
+                            )
+                        }
+                        allFiles.add(FileEntity(file.absolutePath, hash))
+                    }
                 }
 
-            } else {
-                // If the root is a file, add its path to the list
-                Log.e("check","mate")
-                fileList.add(
-                    FileItem(
-                        root.absolutePath,
-                        root.length(),
-                        Files.readAttributes(root.toPath(), BasicFileAttributes::class.java)
-                            .creationTime(),
-                        false
-                    )
-                )
             }
         }
     }
@@ -117,8 +112,8 @@ class RepositoryImpl(
         return output.toString()
     }
 
-    private suspend fun insertFile(fileEntity: FileEntity) =
-        withContext(Dispatchers.IO) { db.dao.insertFile(fileEntity) }
+    private suspend fun insertFiles(fileEntities: List<FileEntity>) =
+        withContext(Dispatchers.IO) { db.dao.insertFiles(fileEntities) }
 
     private suspend fun getByPath(path: String): FileEntity? =
         withContext(Dispatchers.IO) { db.dao.getFileByPath(path) }

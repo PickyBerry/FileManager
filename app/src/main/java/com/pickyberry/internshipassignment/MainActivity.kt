@@ -11,6 +11,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.pickyberry.internshipassignment.databinding.ActivityMainBinding
+import com.pickyberry.internshipassignment.di.DaggerDbComponent
+import com.pickyberry.internshipassignment.di.DaggerRepositoryComponent
+import com.pickyberry.internshipassignment.di.DbComponent
+import com.pickyberry.internshipassignment.di.RepositoryComponent
 
 
 class MainActivity : AppCompatActivity() {
@@ -20,10 +24,18 @@ class MainActivity : AppCompatActivity() {
     private val REQUEST_CODE_PERMISSIONS = 101
     private val REQUIRED_PERMISSIONS = arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE)
 
+    //Setting up DI components for the project
+
+    lateinit var dbComponent: DbComponent
+    lateinit var repositoryComponent: RepositoryComponent
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        dbComponent = DaggerDbComponent.builder().application(application).build()
+        repositoryComponent = DaggerRepositoryComponent.builder().application(application).dbComponent(dbComponent).build()
 
         if (!allPermissionsGranted())
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)

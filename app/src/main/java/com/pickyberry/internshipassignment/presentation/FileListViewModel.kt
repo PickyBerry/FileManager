@@ -1,30 +1,35 @@
 package com.pickyberry.internshipassignment.presentation
 
 import android.os.Environment
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pickyberry.internshipassignment.domain.SortTypes
-import com.pickyberry.internshipassignment.data.RepositoryImpl
 import com.pickyberry.internshipassignment.domain.FileItem
 import com.pickyberry.internshipassignment.domain.Repository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.pickyberry.internshipassignment.domain.SortTypes
+import kotlinx.coroutines.*
 import java.io.File
-import java.util.Collections
+import java.util.*
+import javax.inject.Inject
 
-class FileListViewModel : ViewModel() {
+class FileListViewModel @Inject constructor(
+    private val repository: Repository,
+) : ViewModel() {
 
-    private val repository: Repository = RepositoryImpl()
     private val _currentFiles = MutableLiveData<List<FileItem>>()
     val currentFiles = _currentFiles
+
+    private var currentRootPath = Environment.getExternalStorageDirectory().absolutePath
     var sortedBy = SortTypes.NAMES_ASC
     val loading = MutableLiveData<Boolean>()
     var showingUpdatedFiles = false
-    private var allFiles = listOf<FileItem>()
-    private var updatedFiles = listOf<FileItem>()
-    private var currentRootPath = Environment.getExternalStorageDirectory().absolutePath
+
+    private var updatedFilesJob: Job? = null
+    private val updatedFilesDeferred: Deferred<List<FileItem>> =
+        viewModelScope.async(Dispatchers.IO) {
+            val updatedFiles = repository.getUpdatedFiles(File("/storage/emulated/0/Download/VK"), mutableListOf())
+            updatedFiles
+        }
 
 
     init {
@@ -33,7 +38,6 @@ class FileListViewModel : ViewModel() {
 
     fun getFiles(rootPath: String, newType: SortTypes?) =
         viewModelScope.launch(Dispatchers.IO) {
-            repository.getUpdatedFiles(File(rootPath), mutableListOf<FileItem>())
             loading.postValue(true)
 
             val sortType = newType ?: sortedBy
@@ -47,8 +51,7 @@ class FileListViewModel : ViewModel() {
 
     fun sort(list: MutableList<FileItem>?, type: SortTypes) {
         val newList = list ?: currentFiles.value!!.toMutableList()
-        if (shouldReverse(type)) newList.reverse()
-        else when (type) {
+        when (type) {
             //ПОПРОБОВАТЬ ЗАМЕНИТЬ НА list.sortBy !!!!!!!!!!
             SortTypes.NAMES_ASC -> Collections.sort(
                 newList,
@@ -96,27 +99,23 @@ class FileListViewModel : ViewModel() {
     }
 
     fun goBack() {
-        val newRootPath = currentRootPath.replaceAfterLast('/',"").dropLast(1)
-        Log.e("path",newRootPath)
-        getFiles(newRootPath,sortedBy)
+        if (currentRootPath!=Environment.getExternalStorageDirectory().absolutePath) {
+            val newRootPath = currentRootPath.replaceAfterLast('/', "").dropLast(1)
+            getFiles(newRootPath, sortedBy)
+        }
     }
 
     fun switchBetweenAllAndUpdated() {
         showingUpdatedFiles = !showingUpdatedFiles
-        if (showingUpdatedFiles) allFiles = currentFiles.value!!
-        else updatedFiles = currentFiles.value!!
-        //  getFiles(sortedBy)
-    }
-
-    private fun shouldReverse(type: SortTypes): Boolean {
-        return ((type == SortTypes.NAMES_ASC && sortedBy == SortTypes.NAMES_DESC) ||
-                (type == SortTypes.NAMES_DESC && sortedBy == SortTypes.NAMES_ASC) ||
-                (type == SortTypes.SIZE_ASC && sortedBy == SortTypes.SIZE_DESC) ||
-                (type == SortTypes.SIZE_DESC && sortedBy == SortTypes.SIZE_ASC) ||
-                (type == SortTypes.DATE_ASC && sortedBy == SortTypes.DATE_DESC) ||
-                (type == SortTypes.DATE_DESC && sortedBy == SortTypes.DATE_ASC) ||
-                (type == SortTypes.EXT_ASC && sortedBy == SortTypes.EXT_DESC) ||
-                (type == SortTypes.EXT_DESC && sortedBy == SortTypes.EXT_ASC))
+        if (showingUpdatedFiles) {
+            updatedFilesJob = viewModelScope.launch {
+                loading.postValue(true)
+                val result = updatedFilesDeferred.await()
+                if (showingUpdatedFiles) sort(result.toMutableList(), sortedBy)
+            }
+        } else {
+            getFiles(currentRootPath, sortedBy)
+        }
     }
 
 }

@@ -6,22 +6,22 @@ import dagger.BindsInstance
 import dagger.Component
 import javax.inject.Singleton
 
+
+@Singleton
+@Component(modules = [DbModule::class])
 interface DbComponent {
-    @Singleton
-    @Component(modules = [DbModule::class])
-    interface DbComponent{
 
-        fun userDb(): FilesDatabase
+    fun userDb(): FilesDatabase
 
-        @Component.Builder
-        interface Builder {
 
-            @BindsInstance
-            fun application(application: Application): Builder
+    @Component.Builder
+    interface Builder {
 
-            fun build(): DbComponent
+        @BindsInstance
+        fun application(application: Application): Builder
 
-        }
+        fun build(): DbComponent
 
     }
+
 }

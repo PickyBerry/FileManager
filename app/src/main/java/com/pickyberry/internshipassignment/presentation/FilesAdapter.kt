@@ -4,7 +4,6 @@ import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.webkit.MimeTypeMap
@@ -49,7 +48,6 @@ class FilesAdapter(private val context: Context) :
                     fileItem.path.split('.').last()
                 )
             )
-            Log.e(fileItem.path, fileItem.path.split('.').last())
         }
         holder.itemView.setOnClickListener {
             if (fileItem.isDirectory)
@@ -80,8 +78,11 @@ class FilesAdapter(private val context: Context) :
         }
 
         holder.itemView.setOnLongClickListener {
-            shareFile(fileItem)
-            true
+            if (!fileItem.isDirectory) {
+                shareFile(fileItem)
+                return@setOnLongClickListener true
+            }
+            return@setOnLongClickListener false
         }
     }
 

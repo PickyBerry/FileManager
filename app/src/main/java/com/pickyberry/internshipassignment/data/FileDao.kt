@@ -10,7 +10,8 @@ import androidx.room.Query
 interface FileDao {
 
     @Insert(onConflict= OnConflictStrategy.REPLACE)
-    suspend fun insertFile(file: FileEntity)
+    @JvmSuppressWildcards
+    suspend fun insertFiles(files: List<FileEntity>)
 
     @Query("DELETE FROM fileentity")
     suspend fun clearFiles()

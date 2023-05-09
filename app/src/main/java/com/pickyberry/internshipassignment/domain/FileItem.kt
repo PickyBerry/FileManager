@@ -35,7 +35,7 @@ data class FileItem(
             Comparator<FileItem> { o1, o2 -> o1!!.creationDate.compareTo(o2!!.creationDate) }
 
         fun sortDatesDescending(): Comparator<FileItem> =
-            Comparator<FileItem> { o1, o2 -> o1!!.creationDate.compareTo(o2!!.creationDate) }
+            Comparator<FileItem> { o1, o2 -> o2!!.creationDate.compareTo(o1!!.creationDate) }
 
         fun sortExtensionsAscending(): Comparator<FileItem> =
             Comparator<FileItem> { o1, o2 ->
