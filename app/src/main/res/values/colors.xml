@@ -11,4 +11,7 @@
     <color name="primarytext">#FF212A3E</color>
     <color name="secondarytext">#FF9BA4B5</color>
     <color name="blue">#FF394867</color>
+    <color name="purple">#FF85586F</color>
+    <color name="red">#FFB2675E</color>
+    <color name="lion">#FFC4A381</color>
 </resources>

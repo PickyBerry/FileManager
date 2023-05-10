@@ -113,9 +113,7 @@ class FileListViewModel @Inject constructor(
             switchBetweenAllAndUpdated()
             return true
         } else if (currentRootPath != Environment.getExternalStorageDirectory().absolutePath) {
-            Log.e("um", currentRootPath)
             val newRootPath = currentRootPath.replaceAfterLast('/', "").dropLast(1)
-            Log.e("um", newRootPath)
             getFiles(newRootPath, sortedBy)
             return true
         }

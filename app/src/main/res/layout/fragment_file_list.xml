@@ -13,7 +13,7 @@
         <androidx.appcompat.widget.Toolbar
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/blue">
+            android:background="@color/lion">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -46,7 +46,7 @@
                 android:layout_height="300dp"
                 android:layout_gravity="center"
                 android:indeterminate="true"
-                android:indeterminateTint="@color/blue"
+                android:indeterminateTint="@color/lion"
                 android:indeterminateTintMode="src_atop" />
 
         </FrameLayout>
@@ -69,7 +69,6 @@
         android:layout_gravity="end | bottom"
         android:layout_margin="20dp"
         android:background="@drawable/round_rectangle_96"
-        android:src="@drawable/round_rectangle_96"
         android:text="@string/see_updated" />
 
 </FrameLayout>
