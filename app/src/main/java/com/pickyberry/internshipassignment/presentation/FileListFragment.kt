@@ -19,7 +19,7 @@ import com.pickyberry.internshipassignment.domain.SortTypes
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
+//Main screen to display list of files
 class FileListFragment : Fragment() {
 
     private lateinit var binding: FragmentFileListBinding
@@ -39,22 +39,47 @@ class FileListFragment : Fragment() {
     ): View {
         binding = FragmentFileListBinding.inflate(layoutInflater)
 
+        //Inject dagger2 dependencies
         (activity as MainActivity).repositoryComponent.inject(this)
 
+
+
+        setViewmodelObservers()
+        setupRecycler()
+        setupSpinner()
+        overrideOnBackPressed()
+
+
+        //Switch between showing all files and updated files
+        binding.btnSwitch.setOnClickListener {
+            viewModel.switchBetweenAllAndUpdated()
+            binding.btnSwitch.text =
+                if (viewModel.showingUpdatedFiles) resources.getString(R.string.see_all)
+                else resources.getString(R.string.see_updated)
+        }
+
+        //Get files from clicked directory
+        recyclerFilesAdapter.folderClicked.observe(viewLifecycleOwner) {
+            viewModel.getFiles(it, null)
+        }
+
+
+        return binding.root
+    }
+
+    private fun setViewmodelObservers() {
+        //Observe loading state
         viewModel.loading.observe(viewLifecycleOwner) { loading ->
             if (loading) {
                 binding.progressBar.visibility = View.VISIBLE
                 binding.sortSpinner.visibility = View.GONE
-            //    binding.btnSwitch.visibility = View.GONE
             } else {
                 binding.progressBar.visibility = View.GONE
                 binding.sortSpinner.visibility = View.VISIBLE
-         //       binding.btnSwitch.visibility = View.VISIBLE
             }
         }
-        setupRecycler()
-        setupSpinner()
-        overrideOnBackPressed()
+
+        //Observe list updates
         viewModel.currentFiles.observe(viewLifecycleOwner) {
             if (binding.sortSpinner.onItemSelectedListener == null) {
                 binding.sortSpinner.onItemSelectedListener =
@@ -76,19 +101,6 @@ class FileListFragment : Fragment() {
             }
             recyclerFilesAdapter.setData(it)
         }
-
-
-        binding.btnSwitch.setOnClickListener {
-            viewModel.switchBetweenAllAndUpdated()
-            binding.btnSwitch.text =
-                if (viewModel.showingUpdatedFiles) resources.getString(R.string.see_all)
-                else resources.getString(R.string.see_updated)
-        }
-
-        recyclerFilesAdapter.folderClicked.observe(viewLifecycleOwner) {
-            viewModel.getFiles(it, null)
-        }
-        return binding.root
     }
 
 
@@ -110,13 +122,17 @@ class FileListFragment : Fragment() {
         binding.sortSpinner.adapter = spinnerAdapter
     }
 
+    //Go to previous folder on back button pressed, if can't - exit app
     private fun overrideOnBackPressed() {
         requireActivity()
             .onBackPressedDispatcher
             .addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
 
                 override fun handleOnBackPressed() {
-                    viewModel.goBack()
+                    if (isEnabled && !viewModel.goBack()) {
+                        isEnabled = false
+                        requireActivity().onBackPressed()
+                    }
                 }
             }
             )

@@ -13,6 +13,7 @@ import javax.inject.Scope
 annotation class RepositoryScope
 
 
+//Dagger2 component for repository
 @RepositoryScope
 @Component(
     modules = [RepositoryModule::class,ViewModelModule::class],

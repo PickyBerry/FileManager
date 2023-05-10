@@ -10,6 +10,8 @@ import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.lifecycle.MutableLiveData
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.pickyberry.internshipassignment.R
 import com.pickyberry.internshipassignment.databinding.ItemFileBinding
@@ -18,11 +20,24 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 
 
+//Recyclerview adapter
 class FilesAdapter(private val context: Context) :
     RecyclerView.Adapter<FilesAdapter.FileViewHolder>() {
 
+    //Livedata to send data about which folder was clicked
     val folderClicked = MutableLiveData<String>()
-    var currentList = listOf<FileItem>()
+
+    //Using DiffUtils
+    private val differCallback = object : DiffUtil.ItemCallback<FileItem>() {
+        override fun areItemsTheSame(oldItem: FileItem, newItem: FileItem): Boolean {
+            return oldItem == newItem
+        }
+
+        override fun areContentsTheSame(oldItem: FileItem, newItem: FileItem): Boolean {
+            return oldItem == newItem
+        }
+    }
+    private val differ = AsyncListDiffer(this, differCallback)
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -33,10 +48,11 @@ class FilesAdapter(private val context: Context) :
         return FileViewHolder(binding)
     }
 
-    //On binding of the view holder,
     override fun onBindViewHolder(holder: FileViewHolder, position: Int) {
-        val fileItem = currentList[position]
+        val fileItem = differ.currentList[position]
         val binding = holder.binding
+
+        //Set up visuals
         holder.itemView.apply {
             binding.name.text = fileItem.path.split('/').last()
             binding.size.text = FileUtils.byteCountToDisplaySize(fileItem.size).toString()
@@ -49,6 +65,8 @@ class FilesAdapter(private val context: Context) :
                 )
             )
         }
+
+        //On click open file or directory
         holder.itemView.setOnClickListener {
             if (fileItem.isDirectory)
                 folderClicked.postValue(fileItem.path)
@@ -77,6 +95,7 @@ class FilesAdapter(private val context: Context) :
             }
         }
 
+        //On long click - send file
         holder.itemView.setOnLongClickListener {
             if (!fileItem.isDirectory) {
                 shareFile(fileItem)
@@ -86,6 +105,7 @@ class FilesAdapter(private val context: Context) :
         }
     }
 
+    //function to send file to other apps
     private fun shareFile(fileItem: FileItem) {
         val file = File(fileItem.path)
         val path = FileProvider.getUriForFile(
@@ -106,7 +126,7 @@ class FilesAdapter(private val context: Context) :
         sharingIntent.clipData = ClipData(
             "",
             arrayOf(
-                MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileItem.path.split('.').last())
+                sharingIntent.type
             ),
             ClipData.Item(path)
         )
@@ -115,17 +135,17 @@ class FilesAdapter(private val context: Context) :
 
 
     fun setData(list: List<FileItem>) {
-        currentList = list
-        notifyDataSetChanged()
+        differ.submitList(list)
     }
 
 
-    override fun getItemCount() = currentList.size
+    override fun getItemCount() = differ.currentList.size
 
 
     class FileViewHolder(
         val binding: ItemFileBinding,
     ) : RecyclerView.ViewHolder(binding.root)
+
 
 
     private fun iconFromFileExtension(extension: String): Int {
@@ -140,5 +160,7 @@ class FilesAdapter(private val context: Context) :
         else if (videoExtensions.contains(extension)) R.drawable.video_icon
         else R.drawable.file_icon
     }
+
+
 
 }

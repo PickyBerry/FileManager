@@ -1,7 +1,6 @@
 package com.pickyberry.internshipassignment.data
 
 
-import android.util.Log
 import com.pickyberry.internshipassignment.domain.FileItem
 import com.pickyberry.internshipassignment.domain.Repository
 import kotlinx.coroutines.Dispatchers
@@ -16,9 +15,14 @@ class RepositoryImpl(
     private val db: FilesDatabase,
 ) : Repository {
 
+    //Updated files to be sent to viewmodel
     private val updatedFiles = mutableListOf<FileItem>()
+
+    //all files to update database
     private val allFiles = mutableListOf<FileEntity>()
 
+
+    //List the files within folder
     override suspend fun getFiles(root: File, fileList: MutableList<FileItem>) {
         withContext(Dispatchers.IO) {
             val files = root.listFiles()
@@ -38,12 +42,14 @@ class RepositoryImpl(
                 }
 
             }
-
-
         }
     }
 
-    override suspend fun getUpdatedFiles(root: File, fileList: MutableList<FileItem>):List<FileItem> {
+    //Calculate new hashes and update the database
+    override suspend fun getUpdatedFiles(
+        root: File,
+        fileList: MutableList<FileItem>,
+    ): List<FileItem> {
         withContext(Dispatchers.IO) {
             getHashes(root, fileList)
             clearFiles()
@@ -52,10 +58,10 @@ class RepositoryImpl(
         return updatedFiles
     }
 
+    //Calculate hashes for all files from root folder
     private suspend fun getHashes(root: File, fileList: MutableList<FileItem>) {
         if (root.isDirectory) {
             val files = root.listFiles()
-            files.forEach{ Log.e("hm",it.toString())}
             files?.let {
                 for (file in it) {
                     if (file.isDirectory)
@@ -84,6 +90,7 @@ class RepositoryImpl(
         }
     }
 
+    //MD5 hashing for files
     private fun getFileChecksum(file: File): String {
         val digest = MessageDigest.getInstance("MD5")
         val inputStream = FileInputStream(file)

@@ -1,6 +1,7 @@
 package com.pickyberry.internshipassignment.presentation
 
 import android.os.Environment
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,22 +13,26 @@ import java.io.File
 import java.util.*
 import javax.inject.Inject
 
+//Viewmodel for main screen
 class FileListViewModel @Inject constructor(
     private val repository: Repository,
 ) : ViewModel() {
 
+    //Livedata of files to be observed by fragment
     private val _currentFiles = MutableLiveData<List<FileItem>>()
     val currentFiles = _currentFiles
 
+    //Our states
     private var currentRootPath = Environment.getExternalStorageDirectory().absolutePath
-    var sortedBy = SortTypes.NAMES_ASC
+    private var sortedBy = SortTypes.NAMES_ASC
     val loading = MutableLiveData<Boolean>()
     var showingUpdatedFiles = false
 
+    //Coroutine jobs to do file hashing in the background
     private var updatedFilesJob: Job? = null
     private val updatedFilesDeferred: Deferred<List<FileItem>> =
         viewModelScope.async(Dispatchers.IO) {
-            val updatedFiles = repository.getUpdatedFiles(File("/storage/emulated/0/Download/VK"), mutableListOf())
+            val updatedFiles = repository.getUpdatedFiles(File(Environment.getExternalStorageDirectory().absolutePath), mutableListOf())
             updatedFiles
         }
 
@@ -36,6 +41,7 @@ class FileListViewModel @Inject constructor(
         getFiles(currentRootPath, SortTypes.NAMES_ASC)
     }
 
+    //Get files from specific folder
     fun getFiles(rootPath: String, newType: SortTypes?) =
         viewModelScope.launch(Dispatchers.IO) {
             loading.postValue(true)
@@ -49,6 +55,7 @@ class FileListViewModel @Inject constructor(
         }
 
 
+    //Sort incoming list
     fun sort(list: MutableList<FileItem>?, type: SortTypes) {
         val newList = list ?: currentFiles.value!!.toMutableList()
         when (type) {
@@ -90,7 +97,7 @@ class FileListViewModel @Inject constructor(
 
             SortTypes.EXT_DESC -> Collections.sort(
                 newList,
-                FileItem.sortExtensionsDescending()
+                FileItem.sortIsDirectory().thenComparing(FileItem.sortExtensionsDescending())
             )
         }
         _currentFiles.postValue(newList)
@@ -98,13 +105,23 @@ class FileListViewModel @Inject constructor(
         loading.postValue(false)
     }
 
-    fun goBack() {
-        if (currentRootPath!=Environment.getExternalStorageDirectory().absolutePath) {
-            val newRootPath = currentRootPath.replaceAfterLast('/', "").dropLast(1)
-            getFiles(newRootPath, sortedBy)
+    //Navigate back if possible
+    fun goBack(): Boolean {
+        if (showingUpdatedFiles) {
+            switchBetweenAllAndUpdated()
+            return true
         }
+        else if (currentRootPath!=Environment.getExternalStorageDirectory().absolutePath) {
+            Log.e("um",currentRootPath)
+            val newRootPath = currentRootPath.replaceAfterLast('/', "").dropLast(1)
+            Log.e("um",newRootPath)
+            getFiles(newRootPath, sortedBy)
+            return true
+        }
+        return false
     }
 
+    //Update data to display all files or updated files
     fun switchBetweenAllAndUpdated() {
         showingUpdatedFiles = !showingUpdatedFiles
         if (showingUpdatedFiles) {

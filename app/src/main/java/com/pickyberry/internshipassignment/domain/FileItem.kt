@@ -4,12 +4,14 @@ import java.nio.file.attribute.FileTime
 import java.util.*
 import kotlin.Comparator
 
+//Domain class for FileItem that will be displayed to user
 data class FileItem(
     val path: String,
     val size: Long,
     val creationDate: FileTime,
     val isDirectory: Boolean
 ) {
+    //Companion object contains all comparators for this class
     companion object {
 
         fun sortIsDirectory(): Comparator<FileItem> =

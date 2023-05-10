@@ -6,7 +6,7 @@ import dagger.BindsInstance
 import dagger.Component
 import javax.inject.Singleton
 
-
+//Dagger2 component for database
 @Singleton
 @Component(modules = [DbModule::class])
 interface DbComponent {

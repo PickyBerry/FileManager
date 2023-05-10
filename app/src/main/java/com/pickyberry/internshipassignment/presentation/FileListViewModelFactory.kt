@@ -6,6 +6,7 @@ import com.pickyberry.internshipassignment.di.RepositoryScope
 import javax.inject.Inject
 import javax.inject.Provider
 
+//Viewmodel factory
 @RepositoryScope
 class FileListViewModelFactory @Inject constructor(
     private val creators: Map<Class<out ViewModel>, @JvmSuppressWildcards Provider<ViewModel>>

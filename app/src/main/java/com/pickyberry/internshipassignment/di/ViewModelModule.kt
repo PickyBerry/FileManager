@@ -17,8 +17,6 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(FileListViewModel::class)
     abstract fun bindMyViewModel(view: FileListViewModel): ViewModel
-
-
     @Binds
     abstract fun bindViewModelFactory(factory: FileListViewModelFactory): ViewModelProvider.Factory
 }

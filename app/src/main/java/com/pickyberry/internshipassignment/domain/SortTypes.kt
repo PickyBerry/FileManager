@@ -1,5 +1,6 @@
 package com.pickyberry.internshipassignment.domain
 
+//Enum class for how data can be sorted
 enum class SortTypes(val value: Int) {
     NAMES_ASC(0),NAMES_DESC(1),SIZE_ASC(2),SIZE_DESC(3),DATE_ASC(4),DATE_DESC(5),EXT_ASC(6),EXT_DESC(7);
 
