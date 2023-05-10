@@ -59,8 +59,8 @@ class FileListFragment : Fragment() {
         }
 
         //Get files from clicked directory
-        recyclerFilesAdapter.folderClicked.observe(viewLifecycleOwner) {
-            viewModel.getFiles(it, null)
+        recyclerFilesAdapter.folderClicked.observe(viewLifecycleOwner) { folderPath ->
+            viewModel.getFiles(folderPath)
         }
 
 
@@ -89,7 +89,7 @@ class FileListFragment : Fragment() {
                             itemSelected: View?, selectedItemPosition: Int, selectedId: Long,
                         ) {
                             lifecycleScope.launch {
-                                viewModel.sort(null, SortTypes.from(selectedItemPosition)!!)
+                                viewModel.sort(type = SortTypes.from(selectedItemPosition)!!)
                             }
                             binding.recyclerView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
                                 binding.recyclerView.scrollToPosition(0)

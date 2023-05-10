@@ -56,7 +56,7 @@ class FilesAdapter(private val context: Context) :
         holder.itemView.apply {
             binding.name.text = fileItem.path.split('/').last()
             binding.size.text = FileUtils.byteCountToDisplaySize(fileItem.size).toString()
-            binding.date.text = fileItem.creationDate.toString()
+            binding.date.text = fileItem.creationDate.toString().dropLast(1).replace('T',' ')
             if (fileItem.isDirectory)
                 binding.icon.setImageResource(R.drawable.folder_icon)
             else binding.icon.setImageResource(

@@ -32,7 +32,10 @@ class FileListViewModel @Inject constructor(
     private var updatedFilesJob: Job? = null
     private val updatedFilesDeferred: Deferred<List<FileItem>> =
         viewModelScope.async(Dispatchers.IO) {
-            val updatedFiles = repository.getUpdatedFiles(File(Environment.getExternalStorageDirectory().absolutePath), mutableListOf())
+            val updatedFiles = repository.getUpdatedFiles(
+                File(Environment.getExternalStorageDirectory().absolutePath),
+                mutableListOf()
+            )
             updatedFiles
         }
 
@@ -42,65 +45,64 @@ class FileListViewModel @Inject constructor(
     }
 
     //Get files from specific folder
-    fun getFiles(rootPath: String, newType: SortTypes?) =
+    fun getFiles(rootPath: String, newSortType: SortTypes = sortedBy) =
         viewModelScope.launch(Dispatchers.IO) {
             loading.postValue(true)
 
-            val sortType = newType ?: sortedBy
             val list = mutableListOf<FileItem>()
 
             repository.getFiles(File(rootPath), list)
             currentRootPath = rootPath
-            sort(list, sortType)
+            sort(list, newSortType)
         }
 
 
     //Sort incoming list
-    fun sort(list: MutableList<FileItem>?, type: SortTypes) {
-        val newList = list ?: currentFiles.value!!.toMutableList()
+    fun sort(list: MutableList<FileItem> = currentFiles.value!!.toMutableList(), type: SortTypes) {
+        //   val newList = list ?:
         when (type) {
             //ПОПРОБОВАТЬ ЗАМЕНИТЬ НА list.sortBy !!!!!!!!!!
             SortTypes.NAMES_ASC -> Collections.sort(
-                newList,
+                list,
                 FileItem.sortIsDirectory().thenComparing(FileItem.sortNamesAscending())
             )
 
             SortTypes.NAMES_DESC -> Collections.sort(
-                newList,
+                list,
                 FileItem.sortIsDirectory().thenComparing(FileItem.sortNamesDescending())
             )
 
             SortTypes.SIZE_ASC -> Collections.sort(
-                newList,
+                list,
                 FileItem.sortIsDirectory().thenComparing(FileItem.sortSizesAscending())
             )
 
             SortTypes.SIZE_DESC -> Collections.sort(
-                newList,
+                list,
                 FileItem.sortIsDirectory().thenComparing(FileItem.sortSizesDescending())
             )
 
             SortTypes.DATE_ASC -> Collections.sort(
-                newList,
+                list,
                 FileItem.sortIsDirectory().thenComparing(FileItem.sortDatesAscending())
             )
 
             SortTypes.DATE_DESC -> Collections.sort(
-                newList,
+                list,
                 FileItem.sortIsDirectory().thenComparing(FileItem.sortDatesDescending())
             )
 
             SortTypes.EXT_ASC -> Collections.sort(
-                newList,
+                list,
                 FileItem.sortIsDirectory().thenComparing(FileItem.sortExtensionsAscending())
             )
 
             SortTypes.EXT_DESC -> Collections.sort(
-                newList,
+                list,
                 FileItem.sortIsDirectory().thenComparing(FileItem.sortExtensionsDescending())
             )
         }
-        _currentFiles.postValue(newList)
+        _currentFiles.postValue(list)
         sortedBy = type
         loading.postValue(false)
     }
@@ -110,11 +112,10 @@ class FileListViewModel @Inject constructor(
         if (showingUpdatedFiles) {
             switchBetweenAllAndUpdated()
             return true
-        }
-        else if (currentRootPath!=Environment.getExternalStorageDirectory().absolutePath) {
-            Log.e("um",currentRootPath)
+        } else if (currentRootPath != Environment.getExternalStorageDirectory().absolutePath) {
+            Log.e("um", currentRootPath)
             val newRootPath = currentRootPath.replaceAfterLast('/', "").dropLast(1)
-            Log.e("um",newRootPath)
+            Log.e("um", newRootPath)
             getFiles(newRootPath, sortedBy)
             return true
         }
