@@ -2,7 +2,7 @@
 
 * Extensive file manager app for Android
 
-![image](https://github.com/PickyBerry/InternshipAssignment/assets/92033502/80c21f02-bd1e-47cd-ac78-3894a7b2a88c)
+![image](https://github.com/PickyBerry/InternshipAssignment/assets/92033502/d6bc35d8-6e7f-45b8-8c04-93f47364699e)
 
 ## Features
 * Navigate through all the folders on your device
