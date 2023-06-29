@@ -1,4 +1,4 @@
-# InternshipAssignment
+# FileManager
 
 * Extensive file manager app for Android
 
